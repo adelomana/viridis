@@ -3,8 +3,6 @@
 import sys,numpy,matplotlib,random,pickle,math
 import scipy.stats,scipy.spatial
 import matplotlib.pyplot
-#import matplotlib.patches.Ellipse
-#from matplotlib import pyplot
 from matplotlib.patches import Ellipse
 matplotlib.rcParams['pdf.fonttype']=42 # this cryptical line is necessary for Illustrator compatibility of text saved as pdf
 
