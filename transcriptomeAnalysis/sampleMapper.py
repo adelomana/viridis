@@ -1,7 +1,7 @@
 ### this script locates all epochs samples into a diurnal vs. growth space characterized in epoch=0
 
 import sys,numpy,matplotlib,random,pickle,math
-import scipy.stats
+import scipy.stats,scipy.spatial
 import matplotlib.pyplot
 #import matplotlib.patches.Ellipse
 #from matplotlib import pyplot
@@ -408,52 +408,44 @@ def descriptorsWriter(selected,flag):
 
     return None
 
-def dispersionQuantifier(flag):
+def distanceQuantifier(flag):
 
     '''
-    this function quantifies the amount of dispersion along epochs, based on coefficient of variation
+    this function computes the distance between replicates per epoch at each sample point
     '''
-
+    
     co2level=int(flag)
-    # 1. walking along time
-    epochs=[0,1,2]
-    growths=['exp','sta']
-    diurnals=['AM','PM']
+    orderedSamples=sampleOrderer(co2level)
 
-    orderedSamples={}
-    time=0
-    timeLabels=[]
-    for epoch in epochs:
-        for growth in growths:
-            for diurnal in diurnals:
-                time=time+1
-                for sampleID in metaData.keys():
-                    if metaData[sampleID]['co2'] == co2level and metaData[sampleID]['epoch'] == epoch and metaData[sampleID]['growth'] == growth and metaData[sampleID]['diurnal'] == diurnal:
-
-                        timeLabel=diurnal+'.'+growth+'.'+str(epoch+1)
-                        if timeLabel not in timeLabels:
-                            timeLabels.append(timeLabel)
-                            
-                        if time in orderedSamples:
-                            orderedSamples[time].append(sampleID)
-                        else:
-                            orderedSamples[time]=[sampleID]
-
-    # compute CV values / entropy values
-    plottingDistributions=[]
-    plottingTimePoints=[]
+    distances={}
+    epochLabel=0
     for timepoint in orderedSamples.keys():
         workingSamples=orderedSamples[timepoint]
 
-        distribution=coefficientOfVariationDistributionCalculator(workingSamples)
-        entropyValues=entropyFinder(workingSamples)
+        if (timepoint-1)%4 == 0:
+            epochLabel=epochLabel+1
+            distances[epochLabel]=[]
 
-        plottingTimePoints.append(timepoint)
-        plottingDistributions.append(distribution)
+        # computing positions
+        positions=[]
+        for sampleID in workingSamples:
+            x,y=newCoordinateCalculator(sampleID)
+            positions.append([x,y])
 
-    # plot
-    violinParts=matplotlib.pyplot.violinplot(plottingDistributions,plottingTimePoints,showmeans=True,showextrema=False)
+        # computing distances
+        for i in range(len(positions)):
+            for j in range(len(positions)):
+                if i < j:
+                    d=scipy.spatial.distance.euclidean(positions[i],positions[j])
+                    distances[epochLabel].append(d)
 
+    # plotting distances
+    x = distances.keys()
+    y = distances.values()
+
+    violinParts=matplotlib.pyplot.violinplot(y,x,showmeans=True,showextrema=False)
+
+    timeLabels=['epoch.'+str(element) for element in x]
     colors=[]
     for timeLabel in timeLabels:
         if '.1' in timeLabel:
@@ -471,44 +463,26 @@ def dispersionQuantifier(flag):
         violinParts['bodies'][i].set_facecolor(colors[i])
     violinParts['cmeans'].set_edgecolor('black')
 
-    matplotlib.pyplot.ylabel(r'log$_{10}$ CV')
-
+    matplotlib.pyplot.ylabel('replicate distance')
     matplotlib.pyplot.xticks(range(1,len(timeLabels)+1),timeLabels,rotation=-45)
-    matplotlib.pyplot.xlim([0.5,len(timeLabels)+0.5])
-
+    matplotlib.pyplot.ylim([0,1.2])
     matplotlib.pyplot.tight_layout()
-    matplotlib.pyplot.axes().set_aspect('equal')
 
-    fileName='figure.%s.pdf'%(flag)
+    fileName='figures/figure.distances.%s.pdf'%(flag)
     matplotlib.pyplot.savefig(fileName)
     matplotlib.pyplot.clf()
 
+    # checking for significance
+    for i in range(len(x)):
+        for j in range(len(x)):
+            if i < j:
+                a=distances[i+1]
+                b=distances[j+1]
+                statistic,pvalue=scipy.stats.mannwhitneyu(a,b)
+                print flag,i+1,j+1,statistic,pvalue
+
+
     return None
-
-def distanceCalculator(sampleID):
-
-    '''
-    this function calculates a single value measure of lack or resilience
-    '''
-
-    diurnalLoad=loadCalculator(sampleID,'diurnal')
-    growthLoad=loadCalculator(sampleID,'growth')
-
-    if metaData[sampleID]['diurnal'] == 'AM':
-        sepx=diurnalLoad
-    elif metaData[sampleID]['diurnal'] == 'PM':
-        sepx=-diurnalLoad
-
-    if metaData[sampleID]['growth'] == 'exp':
-        sepy=growthLoad
-    elif metaData[sampleID]['growth'] == 'sta':
-        sepy=-growthLoad
-
-    value=0.5*sepx+0.5*sepy
-    #! value=numpy.sqrt(sepx**2+sepy**2)
-    #! value=sepx
-
-    return value
 
 def ellipseSizeCalculator(flag1,flag2):
 
@@ -550,44 +524,6 @@ def ellipseSizeCalculator(flag1,flag2):
     print 'dispersion found for',flag1,flag2,'conditions: ',averageDispersion
 
     return averageDispersion
-
-def entropyCalculator(v):
-
-    # calculating the probability distribution
-    n=len(v)
-    q1 = scipy.stats.scoreatpercentile(v,25)
-    q3 = scipy.stats.scoreatpercentile(v,75)
-    iqd = q3-q1
-    nterm=n**(-1./3.)
-    h=2.*iqd*nterm
-    k=int(math.ceil((max(v)-min(v))/h))
-
-    n,bins=numpy.histogram(v,bins=k)
-
-    y=[]
-    y=numpy.array(n)
-    y=y/float(sum(y))
-
-    s=scipy.stats.entropy(y)
-
-    return h
-
-def entropyFinder(workingSamples):
-
-    '''
-    this function computes the entropy of sample based on expression of the descriptors or the whole transcriptome
-    '''
-
-    H=[]
-    for sampleID in workingSamples:
-        e=[]
-        for geneID in expression.keys():
-            v=expression[geneID][sampleID]
-            e.append(numpy.log10(v+1.))
-        h=entropyCalculator(e)
-    sys.exit()
-        
-    return H
 
 def expressionReader():
 
@@ -1105,52 +1041,6 @@ def oneDimensionTimeMapper():
 
     return None
 
-def probabilisticCoordinateCalculator(sampleID):
-
-    '''
-    this function computes a new list of coordinates (probabilistic) of a sample given for each of the descriptors
-    '''
-
-    x,xA,xW=loadCalculator(sampleID,'diurnal')
-    y,yA,yW=loadCalculator(sampleID,'growth')
-
-    # converting to inverse values for figure representation
-    x=-x
-    xA=[-element for element in xA]
-
-    # converting descriptors scores into probability distributions
-    P,xGrid=probabilityDistributionCalculator(xA,xW,sampleID,'diurnal')
-    Q,yGrid=probabilityDistributionCalculator(yA,yW,sampleID,'growth')
-
-    grid=xGrid
-    if len(xGrid) != len(yGrid):
-        print len(xGrid),len(yGrid)
-        print 'error communicating grid from probabilisticCoordinateCalculator function. Exiting...'
-        sys.exit()
-
-    return P,Q,grid
-
-def probabilityDistributionCalculator(positions,weights,sampleID,label):
-
-    '''
-    this function computes a probability distribution from a data sample
-    '''
-
-    # computing the histogram
-    p,z=weightedHistogrammer(positions,weights)
-
-    ### if plotting == True:
-    figureFile='densityFigures/'+sampleID+'.'+label+'.pdf'
-    matplotlib.pyplot.plot(z,p,'ok')
-    matplotlib.pyplot.xlim([-2.1,2.1])
-    matplotlib.pyplot.ylim([-0.05*max(p),max(p)+0.05*max(p)])
-    matplotlib.pyplot.xlabel('score')
-    matplotlib.pyplot.ylabel('pdf')
-    matplotlib.pyplot.savefig(figureFile)
-    matplotlib.pyplot.clf() 
-
-    return p,z
-
 def setBoxColors(bp,theColor):
 
     '''
@@ -1165,13 +1055,44 @@ def setBoxColors(bp,theColor):
 
     return None
 
+def sampleOrderer(co2level):
+
+    '''
+    this function order samples timewise
+    '''
+
+    epochs=[0,1,2]
+    growths=['exp','sta']
+    diurnals=['AM','PM']
+
+    orderedSamples={}
+    time=0
+    timeLabels=[]
+    for epoch in epochs:
+        for growth in growths:
+            for diurnal in diurnals:
+                time=time+1
+                for sampleID in metaData.keys():
+                    if metaData[sampleID]['co2'] == co2level and metaData[sampleID]['epoch'] == epoch and metaData[sampleID]['growth'] == growth and metaData[sampleID]['diurnal'] == diurnal:
+
+                        timeLabel=diurnal+'.'+growth+'.'+str(epoch+1)
+                        if timeLabel not in timeLabels:
+                            timeLabels.append(timeLabel)
+                            
+                        if time in orderedSamples:
+                            orderedSamples[time].append(sampleID)
+                        else:
+                            orderedSamples[time]=[sampleID]
+
+    return orderedSamples
+
 def weightedHistogrammer(scores,scoresWeights):
 
     '''
     this function computes a weighted histogram of a probability density distribution
     '''
 
-    n,bins=numpy.histogram(scores,weights=scoresWeights,bins=40,range=(-2.,2.))
+    n,bins=numpy.histogram(scores,weights=scoresWeights,bins=20,range=(min(scores),max(scores)))
 
     z=[]
     halfBin=(bins[1]-bins[0])/2.
@@ -1277,20 +1198,18 @@ if boxplotPlotting == True:
     boxPlotGrapher(growthFilteredDescriptors,borders,'growth')
 
 # 2. map samples into a new space of dark/light distributed in x:-2:-1/1:2 and stationary/exponential y:-2:-1/1:2
-#print
-#print 'mapping samples into new space...'
-#newSpaceMapper('300')
-#print
-#newSpaceMapper('1000')
+print
+print 'mapping samples into new space...'
+newSpaceMapper('300')
+print
+newSpaceMapper('1000')
 
 # 3. generating plots of condition dispersion
 print
-print 'computing dispersion...'
-dispersionQuantifier('300')
-dispersionQuantifier('1000')
+print 'computing sample distances...'
+distanceQuantifier('300')
+distanceQuantifier('1000')
 
-dispersionQuantifier2('300')
-dispersionQuantifier2('1000')
 
 # 3. map samples into a new space in a probability manner
 #print
