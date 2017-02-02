@@ -3,6 +3,9 @@
 import os,sys,scipy,matplotlib,numpy,random
 from scipy import stats
 from matplotlib import pyplot
+
+
+matplotlib.rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
 matplotlib.rcParams['pdf.fonttype']=42 # this cryptical line is necessary for Illustrator compatibility of text saved as pdf
 matplotlib.rcParams.update({'xtick.labelsize':20,'ytick.labelsize':20})
 
@@ -97,7 +100,7 @@ def correlationQuantifier(working_co2level,working_epoch,biorepSCCs):
     matplotlib.pyplot.xticks(range(len(conditionNames)),conditionNames,rotation=90)
     matplotlib.pyplot.yticks(range(len(conditionNames)),conditionNames)
     matplotlib.pyplot.tight_layout()
-    figureFileName='correlations.FPKM.{}.{}.png'.format(working_co2level,working_epoch)
+    figureFileName='correlations.FPKM.{}.{}.pdf'.format(working_co2level,working_epoch)
     matplotlib.pyplot.savefig(figureFileName)
     matplotlib.pyplot.clf()
     
@@ -209,7 +212,7 @@ def overalCorrelationPlotter(biorepSCCs):
     matplotlib.pyplot.ylabel('Spearman rank CC',size=24)
     matplotlib.pyplot.xlabel('epoch',size=24)
     matplotlib.pyplot.tight_layout()
-    figureFileName='correlationTrend.png'
+    figureFileName='correlationTrend.pdf'
     matplotlib.pyplot.savefig(figureFileName)
     matplotlib.pyplot.clf()
 
