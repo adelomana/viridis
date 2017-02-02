@@ -19,11 +19,11 @@ def expressionReader(sample):
     return expression
 
 # 0. defining user variables
-countsDir='/Volumes/omics4tb/alomana/projects/dtp/data/reads/tippingPoints/counts/'
+countsDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/counts/'
 tau=10
 
 # 1. reading files
-print 'reading files...'
+print('reading files...')
 sampleLabels=[
     'A1000_6_27_2015A',
     'B1000_6_27_2015A',
@@ -83,6 +83,7 @@ sampleLabels=[
     'F300_7_03_2015P'
     ]
 
+"""
 ###
 sampleLabels=[
    
@@ -116,7 +117,7 @@ sampleLabels=[
     'C1000_7_13_2015P'
 ]
 ###
-
+"""
     
 samples=[]
 allFiles=os.listdir(countsDir)
@@ -128,8 +129,10 @@ for label in sampleLabels:
 
 #samples=samples[:10]
 
+print(samples)
+
 # 2. computing the correlation coefficient
-print 'computing the correlation coefficients...'
+print('computing the correlation coefficients...')
 M=[]
 labels=[]
 controlSamples=[]
@@ -138,11 +141,11 @@ for sample1 in samples:
     labels.append(label)
     controlSamples.append(sample1)
     expression1=expressionReader(sample1)
-    trimmedExpression1={key:expression1[key] for key in expression1 if expression1[key]>10}
+    trimmedExpression1={key:expression1[key] for key in expression1 if expression1[key]>tau}
     V=[]
     for sample2 in samples:
         expression2=expressionReader(sample2)
-        trimmedExpression2={key:expression2[key] for key in expression2 if expression2[key]>10}
+        trimmedExpression2={key:expression2[key] for key in expression2 if expression2[key]>tau}
 
         # finding the overlap
         genes1=trimmedExpression1.keys()
@@ -156,21 +159,16 @@ for sample1 in samples:
             x.append(expression1[element])
             y.append(expression2[element])
         rho,pval=scipy.stats.spearmanr(x,y)
+        print(sample1,sample2,rho)
         V.append(rho)
     M.append(V)
         
 # 3. plotting the matrix of correlations
-print 'plotting the matrix...'
+print('plotting the matrix...')
 matplotlib.pyplot.imshow(M,interpolation='none',cmap='jet')
 matplotlib.pyplot.colorbar()
 matplotlib.pyplot.grid(False)
 matplotlib.pyplot.xticks(range(len(labels)),labels,rotation=90)
 matplotlib.pyplot.yticks(range(len(labels)),labels)
 matplotlib.pyplot.tight_layout()
-matplotlib.pyplot.savefig('correlations.png')
-
-for i in range(len(labels)):
-
-    print labels[i],controlSamples[i]
-
-
+matplotlib.pyplot.savefig('correlations.counts.1000.png')
