@@ -30,7 +30,7 @@ classifiersFinder.py: script that calls cuffdiff to find DETs between two condit
 carbonFixationAnalyser.py: script that calls cuffdiff to find DETs between LC and HC for specific CCM transcripts.  
 
 #### visualizing samples
-samplesCorrelationGrapher.py: script to compute and plot the correlation among samples.  
+samplesCorrelationGrapher.py: script to compute and plot the correlation among samples. Available both on counts and FPKM values.  
 pcaGrapher.py: script to compute the PCA on expression values in FPKM.  
 sampleMapper.py: script to map samples into diurnal and growth coordinates.  
 GSE_Mapper.py: script to map samples into diurnal and growth space from microarray data.  
