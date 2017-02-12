@@ -76,3 +76,11 @@ for inputFile in bamFiles:
 # 3. calling cuffnorm
 print 'calling cuffnorm...'
 cuffnormCaller()
+
+# 4. running cuffdiff
+
+# 4.1. running cuffdiff late versus early samples (only in the light) (1 test)
+
+# 4.2. running cuffdiff late versus early samples (only the light), in two separate carbon levels (2 tests)
+
+# # 4.3. running cuffdiff late versus early samples (only in the light), in separate carbon and epochs (10 tests)
