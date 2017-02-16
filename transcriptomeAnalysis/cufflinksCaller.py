@@ -8,7 +8,7 @@ def cuffdiffCaller(bamFilesA,bamFilesB,label):
     
     outputDir=cuffdiffDir+label+'/'
         
-    term1='cuffdiff %s '%(gtfFile)
+    term1='time cuffdiff %s '%(gtfFile)
     term2='-o %s '%outputDir
     term3='-p %s '%numberOfThreads
     term4='--library-type fr-firststrand '
@@ -21,9 +21,9 @@ def cuffdiffCaller(bamFilesA,bamFilesB,label):
 
     cmd=term1+term2+term3+term4+term5+term6+term8
 
-    print
-    print cmd
-    print
+    print()
+    print(cmd)
+    print()
 
     os.system(cmd)
 
@@ -88,7 +88,7 @@ def metadataReader():
     metaData={}
 
     with open(metaDataFile,'r') as f:
-        f.next()
+        next(f)
         for line in f:
             vector=line.split('\t')
             if vector[4] != '':
@@ -112,12 +112,33 @@ def metadataReader():
 
     return metaData
 
+def samples2bamfiles(samplesA,samplesB):
+
+    '''
+    this function builds the full path of the BAM files
+    '''
+
+    bamFilesA=[]
+    for sample in samplesA:
+        matching = [s for s in fullPathBamFiles if sample in s]
+        fullName=matching[0]
+        bamFilesA.append(fullName)
+
+    bamFilesB=[]
+    for sample in samplesB:
+        matching = [s for s in fullPathBamFiles if sample in s]
+        fullName=matching[0]
+        bamFilesB.append(fullName)
+
+    return bamFilesA,bamFilesB
+
 # 0. defining input files
 metaDataFile='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/metadata/metadata.v2.tsv'
 bamFilesDir='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/bamFiles/'
 cufflinksDir='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/'
 cuffdiffDir='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cuffdiff/'
 gtfFile='/proj/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.gff3'
+fastaFile='/proj/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.dna.genome.fa'
 maskFile='/proj/omics4tb/alomana/projects/dtp/data/ensembl/mask.gff3'
 numberOfThreads=12
 
@@ -128,38 +149,167 @@ metaData=metadataReader()
 roots=os.listdir(bamFilesDir)
 roots.remove('secondRun')
 
-bamFiles=[bamFilesDir+element+'/Aligned.sortedByCoord.out.bam' for element in roots]
+fullPathBamFiles=[bamFilesDir+element+'/Aligned.sortedByCoord.out.bam' for element in roots]
 abundanceFiles=[cufflinksDir+element+'/abundances.cxb' for element in roots]
 labels=[element.split('_')[-1] for element in roots]
 
 # 2. calling cuffquantCaller 
-#print 'calling cuffquant...'
-#for inputFile in bamFiles:
-#    cuffquantCaller(inputFile)
+print 'calling cuffquant...'
+for inputFile in bamFiles:
+    cuffquantCaller(inputFile)
 
 # 3. calling cuffnorm
-#print 'calling cuffnorm...'
-#cuffnormCaller()
+print 'calling cuffnorm...'
+cuffnormCaller()
 
 # 4. running cuffdiff
 print('calling cuffdiff...')
 
 # 4.1. running cuffdiff late versus early samples (only in the light) (1 test)
-testLabel='early.vs.late.inlight'
+testLabel='early.vs.late-AM'
 samplesA=[]
 samplesB=[]
 
 for sampleID in metaData.keys():
-    if metaData[sampleID]['growth'] == 'early':
+    if metaData[sampleID]['growth'] == 'exp' and metaData[sampleID]['diurnal'] == 'AM':
         samplesA.append(sampleID)
-    elif metaData[sampleID]['growth'] == 'late':
+    elif metaData[sampleID]['growth'] == 'sta' and metaData[sampleID]['diurnal'] == 'AM':
         samplesB.append(sampleID)
-    else:
-        print('error selecting samples. exiting...')
-        sys.exit()
 
-cuffdiffCaller(samplesA,samplesB)
+print(samplesA,len(samplesA))
+print(samplesB,len(samplesB))
+    
+bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+print(len(bamFilesA),len(bamFilesB))
+
+cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
 
 # 4.2. running cuffdiff late versus early samples (only the light), in two separate carbon levels (2 tests)
+testingConditions=[300,1000]
+for testingCondition in testingConditions:
 
-# # 4.3. running cuffdiff late versus early samples (only in the light), in separate carbon and epochs (10 tests)
+    testLabel='early.vs.late-AM.{}'.format(testingCondition)
+    samplesA=[]
+    samplesB=[]
+
+    for sampleID in metaData.keys():
+        if metaData[sampleID]['growth'] == 'exp' and metaData[sampleID]['diurnal'] == 'AM' and metaData[sampleID]['co2'] == testingCondition:
+            samplesA.append(sampleID)
+        elif metaData[sampleID]['growth'] == 'sta' and metaData[sampleID]['diurnal'] == 'AM' and metaData[sampleID]['co2'] == testingCondition:
+            samplesB.append(sampleID)
+
+    print(samplesA,len(samplesA))
+    print(samplesB,len(samplesB))
+
+    bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+    print(len(bamFilesA),len(bamFilesB))
+
+    cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
+
+# 4.3. running cuffdiff late versus early samples (both in the light), in separate carbon and epochs (10 tests)
+testingConditionsA=[300,1000]
+testingConditionsB=[0,1,2]
+testingConditionsC=['AM','PM']
+for testingConditionA in testingConditionsA:
+    for testingConditionB in testingConditionsB:
+        for testingConditionC in testingConditionsC:
+
+            print(testingConditionA,testingConditionB,testingConditionC)
+            
+            testLabel='early.vs.late-{}.{}.{}'.format(testingConditionA,testingConditionB,testingConditionC)
+            print('### {}'.format(testLabel))
+            
+            samplesA=[]
+            samplesB=[]
+
+            for sampleID in metaData.keys():
+                if metaData[sampleID]['growth'] == 'exp' and metaData[sampleID]['co2'] == testingConditionA and metaData[sampleID]['epoch'] == testingConditionB and metaData[sampleID]['diurnal'] == testingConditionC:
+                    samplesA.append(sampleID)
+                elif metaData[sampleID]['growth'] == 'sta' and metaData[sampleID]['co2'] == testingConditionA and metaData[sampleID]['epoch'] == testingConditionB and metaData[sampleID]['diurnal'] == testingConditionC:
+                    samplesB.append(sampleID)
+
+            print(samplesA,len(samplesA))
+            print(samplesB,len(samplesB))
+
+            bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+            print(len(bamFilesA),len(bamFilesB))
+
+            cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
+
+# 4.4. running cuffdiff HC vs LC, excluding last epoch (8 tests)
+testingConditionsA=[0,1,2]
+testingConditionsB=['exp','sta']
+testingConditionsC=['AM','PM']
+for testingConditionA in testingConditionsA:
+    for testingConditionB in testingConditionsB:
+        for testingConditionC in testingConditionsC:
+
+            print(testingConditionA,testingConditionB,testingConditionC)
+            
+            testLabel='LC.vs.HC-{}.{}.{}'.format(testingConditionA,testingConditionB,testingConditionC)
+            print('### {}'.format(testLabel))
+            
+            samplesA=[]
+            samplesB=[]
+
+            for sampleID in metaData.keys():
+                if metaData[sampleID]['co2'] == 300 and metaData[sampleID]['epoch'] == testingConditionA and metaData[sampleID]['growth'] == testingConditionB and metaData[sampleID]['diurnal'] == testingConditionC:
+                    samplesA.append(sampleID)
+                elif metaData[sampleID]['co2'] == 1000 and metaData[sampleID]['epoch'] == testingConditionA and metaData[sampleID]['growth'] == testingConditionB and metaData[sampleID]['diurnal'] == testingConditionC:
+                    samplesB.append(sampleID)
+
+            print(samplesA,len(samplesA))
+            print(samplesB,len(samplesB))
+
+            bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+            print(len(bamFilesA),len(bamFilesB))
+
+            cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
+
+# 4.5. running cuffdiff HC vs LC, all combined, or first epoch
+testLabel='LC.vs.HC'
+samplesA=[]
+samplesB=[]
+
+for sampleID in metaData.keys():
+    if metaData[sampleID]['co2'] == 300:
+        samplesA.append(sampleID)
+    elif metaData[sampleID]['co2'] == 1000:
+        samplesB.append(sampleID)
+
+print(samplesA,len(samplesA))
+print(samplesB,len(samplesB))
+
+bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+print(len(bamFilesA),len(bamFilesB))
+
+cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
+
+###
+
+testLabel='LC.vs.HC.only.epoch.0'
+samplesA=[]
+samplesB=[]
+
+for sampleID in metaData.keys():
+    if metaData[sampleID]['co2'] == 300 and metaData[sampleID]['epoch'] == 0:
+        samplesA.append(sampleID)
+    elif metaData[sampleID]['co2'] == 1000 and metaData[sampleID]['epoch'] == 0:
+        samplesB.append(sampleID)
+
+print(samplesA,len(samplesA))
+print(samplesB,len(samplesB))
+
+bamFilesA,bamFilesB=samples2bamfiles(samplesA,samplesB)
+
+print(len(bamFilesA),len(bamFilesB))
+
+cuffdiffCaller(bamFilesA,bamFilesB,testLabel)
+
+# 5. final message
+print('... all done.')
