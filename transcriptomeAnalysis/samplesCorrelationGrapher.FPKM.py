@@ -68,10 +68,6 @@ def correlationQuantifier(working_co2level,working_epoch,biorepSCCs):
                 rho,pval=scipy.stats.spearmanr(expressionA,expressionB)
                 M[i,j]=rho
 
-                #if len(expressionA) < lowDomain:
-                #    lowDomain=len(expressionA)
-                #    print(lowDomain)
-
                 # selecting values for biorepSCCs
                 growthA=metaData[orderedSamples[i]]['growth']
                 growthB=metaData[orderedSamples[j]]['growth']
