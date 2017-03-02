@@ -190,8 +190,7 @@ def overalCorrelationPlotter(biorepSCCs):
             for i in range(len(y)):
                 py=y[i]
                 r=blur/2
-                #r=blur*random.random()
-                px=epoch+sep+r
+                px=x+sep+r
                 matplotlib.pyplot.plot(px,py,'o',color=theColor,alpha=0.33,mew=0.,ms=8)
 
             # plotting mean
