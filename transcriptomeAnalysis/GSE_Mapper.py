@@ -21,8 +21,8 @@ def bordersCalculator(descriptors,borders,flag):
         expressionA=descriptorsExpressionRetriever(descriptors,flag,[1,2])
         expressionB=descriptorsExpressionRetriever(descriptors,flag,[4,5])
     else:
-        print flag
-        print 'error handling flags from boxPlotGrapher'
+        print(flag)
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     # 3. plotting and recovering the info for the mapping samples
@@ -46,7 +46,7 @@ def bordersCalculator(descriptors,borders,flag):
         elif flag == 'growth':
             borders[flag][geneID]=[xa,xb,xc,ya,yb,yc,center,w,sdx,sdy]
         else:
-            print 'error handling flags from boxPlotGrapher (bis)'
+            print('error handling flags from boxPlotGrapher (bis)')
             sys.exit()
         
     return borders
@@ -65,8 +65,8 @@ def boxPlotGrapher(descriptors,borders,flag):
         expressionA=descriptorsExpressionRetriever(descriptors,flag,[1,2])
         expressionB=descriptorsExpressionRetriever(descriptors,flag,[4,5])
     else:
-        print flag
-        print 'error handling flags from boxPlotGrapher'
+        print(flag)
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     # 3. plotting and recovering the info for the mapping samples
@@ -236,7 +236,7 @@ def descriptorsFilter(descriptors,flag):
         expressionA=descriptorsExpressionRetriever(descriptors,flag,[1,2])
         expressionB=descriptorsExpressionRetriever(descriptors,flag,[4,5])
     else:
-        print 'error handling flags from boxPlotGrapher'
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     # 2. computing the separations
@@ -256,7 +256,7 @@ def descriptorsFilter(descriptors,flag):
         elif numpy.mean(y) > numpy.mean(x):
             separation=numpy.min(y)-numpy.max(x)
         else:
-            print 'error computing the separation between the two distributions from descriptorsFilter'
+            print('error computing the separation between the two distributions from descriptorsFilter')
             sys.exit()
         if separation > averageSD:
             separations[geneID]=separation
@@ -273,7 +273,7 @@ def descriptorsRetriever(flag):
     f=open(jar,'r')
     fpkmDescriptors=pickle.load(f)
     f.close()
-    print len(fpkmDescriptors),flag,'FPKM descriptors recovered.'
+    print(len(fpkmDescriptors),flag,'FPKM descriptors recovered.')
 
     listOfDescriptors=[]
     for descriptor in fpkmDescriptors:
@@ -332,7 +332,7 @@ def descriptorsExpressionRetriever(descriptors,flag,condition):
                 if metaData[sampleID][flag] in condition:
                     selectedSamples.append(sampleID)
 
-    print flag,condition,selectedSamples
+    print(flag,condition,selectedSamples)
     # 2. defining the expression values
     selectedExpression={}
     for geneName in descriptors:
@@ -511,7 +511,7 @@ def newSpaceMapper(flag):
     '''
 
     preselectedSamples=[sampleID for sampleID in metaData.keys() if metaData[sampleID]['co2'] == flag]
-    print 'selected ', len(preselectedSamples), 'samples for plotting.'
+    print('selected ', len(preselectedSamples), 'samples for plotting.')
 
     # starting the figure
     fig=matplotlib.pyplot.figure()
@@ -520,7 +520,7 @@ def newSpaceMapper(flag):
     for sampleID in preselectedSamples:
         
         x,y=newCoordinateCalculator(sampleID)
-        print sampleID,x,y
+        print(sampleID,x,y)
         
         theSize=16
         theAlpha=.85
@@ -532,7 +532,7 @@ def newSpaceMapper(flag):
         elif metaData[sampleID]['diurnal'] == 'dark':
             theColor='green'
         else:
-            print 'error selecting the color from newSpaceMapper.'
+            print('error selecting the color from newSpaceMapper.')
             sys.exit()
 
         theDay=sampleID.split('.')[1].replace('Day','')
@@ -617,7 +617,7 @@ def weightNMLCalculator(geneID,flag):
         sumSpaces=sum(growthFilteredDescriptors.values())
         value=growthFilteredDescriptors[geneID]
     else:
-        print 'error from weightNMLCalculator'
+        print('error from weightNMLCalculator')
         sys.exit()
 
     weight=value/sumSpaces
@@ -629,10 +629,10 @@ def weightNMLCalculator(geneID,flag):
 # use the points defined in day 1 and use the gap as unit of measurement. rank equal weights.
 
 # 0. preliminaries
-print
-print 'welcome to GSE_Mapper'
-print
-print 'initializing variables...'
+print ('')
+print('welcome to GSE_Mapper')
+print('')
+print('initializing variables...')
 
 # 0.1. user defined variables and paths
 expressionFile='../data/GSE45252_value_Matrix.txt'
@@ -647,45 +647,45 @@ expression=expressionReader()
 # 1. define descriptors
 
 # 1.1. recover descriptors
-print
-print 'recovering descriptors...'
+print('')
+print('recovering descriptors...')
 
 diurnalDescriptors=descriptorsRetriever('diurnal')
 growthDescriptors=descriptorsRetriever('growth')
-print
-print len(diurnalDescriptors),'diurnal descriptors found after annotation check.'
-print len(growthDescriptors),'growth descriptors found after annotation check.'
+print('')
+print(len(diurnalDescriptors),'diurnal descriptors found after annotation check.')
+print(len(growthDescriptors),'growth descriptors found after annotation check.')
 
 # 1.2. filtering the descriptors based on separation
-print
-print 'filtering descriptors based on separation...'
+print('')
+print('filtering descriptors based on separation...')
 
 diurnalFilteredDescriptors=descriptorsFilter(diurnalDescriptors,'diurnal')
 growthFilteredDescriptors=descriptorsFilter(growthDescriptors,'growth')
-print len(diurnalFilteredDescriptors),'filtered diurnal descriptors.'
-print len(growthFilteredDescriptors),'filtered growth descriptors.'
-print
+print(len(diurnalFilteredDescriptors),'filtered diurnal descriptors.')
+print(len(growthFilteredDescriptors),'filtered growth descriptors.')
+print('')
 
 # 1.3. plotting a boxplots of the best descriptors
-print 'plotting expression graphs for descriptors...'
+print('plotting expression graphs for descriptors...')
 borders={}
 borders=bordersCalculator(diurnalFilteredDescriptors,borders,'diurnal')
 borders=bordersCalculator(growthFilteredDescriptors,borders,'growth')
 
 # 1.4. plotting the boxplots
 if boxplotPlotting == True:
-    print 'plotting expression graphs for descriptors...'
+    print('plotting expression graphs for descriptors...')
     boxPlotGrapher(diurnalFilteredDescriptors,borders,'diurnal')
     boxPlotGrapher(growthFilteredDescriptors,borders,'growth')
 
 # 2. map samples into a new space of dark/light distributed in x:-2:-1/1:2 and stationary/exponential y:-2:-1/1:2
-print
-print 'mapping samples into new space...'
+print('')
+print('mapping samples into new space...')
 newSpaceMapper(400)
-print
+print('')
 newSpaceMapper(800)
 
 # 4. final message
-print
-print '... analysis completed.'
-print        
+print('')
+print('... analysis completed.')
+print('')

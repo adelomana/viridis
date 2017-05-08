@@ -40,7 +40,7 @@ def bordersCalculator(descriptors,borders,flag):
         expressionA=expressionRetriever(descriptors,flag,'exp')
         expressionB=expressionRetriever(descriptors,flag,'sta')
     else:
-        print 'error handling flags from boxPlotGrapher'
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     # f.2. recovering the info for the mapping samples
@@ -86,7 +86,7 @@ def boxPlotGrapher(descriptors,borders,flag):
         expressionA=expressionRetriever(descriptors,flag,'exp')
         expressionB=expressionRetriever(descriptors,flag,'sta')
     else:
-        print 'error handling flags from boxPlotGrapher'
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     listOfDescriptors=sorted(descriptors,key=descriptors.__getitem__,reverse=True) # ranking the descriptors
@@ -173,7 +173,7 @@ def boxPlotMaker(listOfDescriptors,expressionA,expressionB,flag,trend):
                 name=geneID.split('Thaps')[1]
                 names.append(name)
         else:
-            print 'error from boxPlotMaker about trend selection. Exiting...'
+            print('error from boxPlotMaker about trend selection. Exiting...')
             sys.exit()
 
         # closing figure because of number of descriptors
@@ -279,7 +279,7 @@ def descriptorsFilter(descriptors,flag):
         selectedExpressionA=expressionRetriever(descriptors,flag,'exp')
         selectedExpressionB=expressionRetriever(descriptors,flag,'sta')
     else:
-        print 'error handling flags from boxPlotGrapher'
+        print('error handling flags from boxPlotGrapher')
         sys.exit()
 
     # 2. computing the distances
@@ -304,7 +304,7 @@ def descriptorsFilter(descriptors,flag):
         elif numpy.mean(logy) > numpy.mean(logx):
             separation=numpy.min(logy)-numpy.max(logx)
         else:
-            print 'error computing the separation between the two distributions from descriptorsFilter'
+            print('error computing the separation between the two distributions from descriptorsFilter')
             sys.exit()
         if separation > averageSD:
             separations[geneID]=separation
@@ -322,7 +322,7 @@ def descriptorsRetriever(flag):
     
     inputFile=cuffdiffDir+'%s/gene_exp.diff'%flag
     with open(inputFile,'r') as f:
-        f.next()
+        next(f)
         for line in f:
             vector=line.split('\t')
             geneName=vector[0]
@@ -400,7 +400,7 @@ def descriptorsWriter(selected,flag):
 
     # f.4 pickle the descriptors for other tools, like GSE_Mapper.py
     jar=flag+'.pckl'
-    f=open(jar,'w')
+    f=open(jar,'wb')
     pickle.dump(sortedList,f)
     f.close()
 
@@ -438,8 +438,8 @@ def distanceQuantifier(flag):
                     distances[epochLabel].append(d)
 
     # plotting distances
-    x = distances.keys()
-    y = distances.values()
+    x=list(distances.keys())
+    y=list(distances.values())
 
     violinParts=matplotlib.pyplot.violinplot(y,x,showmeans=True,showextrema=False)
 
@@ -453,7 +453,7 @@ def distanceQuantifier(flag):
         elif '.3' in timeLabel:
             colors.append('red')
         else:
-            print 'error assigning violin colors. exiting...'
+            print('error assigning violin colors. exiting...')
             sys.exit()
 
     for i in range(len(timeLabels)):
@@ -477,7 +477,7 @@ def distanceQuantifier(flag):
                 a=distances[i+1]
                 b=distances[j+1]
                 statistic,pvalue=scipy.stats.mannwhitneyu(a,b)
-                print flag,i+1,j+1,statistic,pvalue
+                print(flag,i+1,j+1,statistic,pvalue)
 
 
     return None
@@ -519,7 +519,7 @@ def ellipseSizeCalculator(flag1,flag2):
         value=position*weight
         averageDispersion=averageDispersion+value
 
-    print 'dispersion found for',flag1,flag2,'conditions: ',averageDispersion
+    print('dispersion found for',flag1,flag2,'conditions: ',averageDispersion)
 
     return averageDispersion
 
@@ -534,7 +534,7 @@ def expressionReader():
         header=f.readline()
         prelabels=header.split('\t')[1:]
         labels=[element.split('_')[0] for element in prelabels]
-        f.next()
+        next(f)
         for line in f:
             vector=line.split('\t')
 
@@ -701,7 +701,7 @@ def metadataReader():
     metaData={}
 
     with open(metaDataFile,'r') as f:
-        f.next()
+        next(f)
         for line in f:
             vector=line.split('\t')
             if vector[4] != '':
@@ -746,7 +746,7 @@ def newSpaceMapper(flag):
     '''
 
     preselectedSamples=[sampleID for sampleID in metaData.keys() if metaData[sampleID]['co2'] == int(flag)]
-    print 'selected ', len(preselectedSamples), 'samples for plotting on ',flag, 'condition.'
+    print('selected ', len(preselectedSamples), 'samples for plotting on ',flag, 'condition.')
 
     # starting the figure
     fig=matplotlib.pyplot.figure()
@@ -768,7 +768,7 @@ def newSpaceMapper(flag):
             elif metaData[sampleID]['replicate'] == 'C':
                 theColor='orangered'
             else:
-                print 'error defining AM replicate at newSpaceMapper. exiting...'
+                print('error defining AM replicate at newSpaceMapper. exiting...')
                 sys.exit()
         elif metaData[sampleID]['diurnal'] == 'PM':
             if metaData[sampleID]['replicate'] == 'A':
@@ -778,10 +778,10 @@ def newSpaceMapper(flag):
             elif metaData[sampleID]['replicate'] == 'C':
                 theColor='lightseagreen'
             else:
-                print 'error defining PM replicate at newSpaceMapper. exiting...'
+                print('error defining PM replicate at newSpaceMapper. exiting...')
                 sys.exit()
         else:
-            print 'error while defining the color from main'
+            print('error while defining the color from main')
             sys.exit()
 
         # defining the marker type depending on epoch
@@ -792,7 +792,7 @@ def newSpaceMapper(flag):
         elif metaData[sampleID]['epoch'] == 2:
             theMarker='^'
         else:
-            print 'error while defining the marker from main'
+            print('error while defining the marker from main')
             sys.exit()
 
         # defining the facecolor and markeredgecolor depending on exp/sta
@@ -801,7 +801,7 @@ def newSpaceMapper(flag):
         elif metaData[sampleID]['growth'] == 'sta':
             theMFC=theColor; theMEC='None'
         else:
-            print 'error while defining the marker from main'
+            print('error while defining the marker from main')
             sys.exit()
       
         ax.plot(x,y,marker=theMarker,mew=1,color=theColor,ms=theSize,alpha=theAlpha,mfc=theMFC,mec=theColor,zorder=10)
@@ -879,164 +879,6 @@ def newSpaceMapper(flag):
     matplotlib.pyplot.savefig('figures/sampleLocation.%s.pdf'%(str(int(flag))))
     matplotlib.pyplot.clf()
     
-    return None
-
-def newSpaceProbabilisticMapper(flag):
-
-    '''
-    this function plots the samples into a new space considering in a probabilistic way each of the descriptors
-    '''
-
-    preselectedSamples=[sampleID for sampleID in metaData.keys() if metaData[sampleID]['co2'] == int(flag)]
-    print 'selected ', len(preselectedSamples), 'samples for plotting on ',flag, 'condition.'
-
-    # starting the figure
-    epochT={}
-    epochGP={}
-    for sampleID in preselectedSamples:
-        for i in range(3):
-            
-            epochT[i]=[]
-            epochGP[i]=[]
-                
-
-        x,y=newCoordinateCalculator(sampleID)
-        P,Q,grid=probabilisticCoordinateCalculator(sampleID)
-
-        m=[]
-        for i in range(len(grid)):
-            v=[]
-            for j in range(len(grid)):
-                product=P[i]*Q[j]
-                #if product == 0.:
-                #    product=float('nan')
-
-                v.append(product)
-            m.append(v)
-        m=numpy.array(m)
-        t=numpy.transpose(m)
-
-        print numpy.max(t)
-
-        # plotting the figure
-        gridPosition=[20+x*10,20+y*10]
-        matplotlib.pyplot.imshow(t,interpolation='none',cmap='Blues',origin='lower',extent=(0,40,0,40)) # kaiser is a good interpolation
-        matplotlib.pyplot.plot(gridPosition[0],gridPosition[1],'o',color='red',mew=0.)
-        matplotlib.pyplot.hold(True)
-
-    # setting ranges and labels
-    matplotlib.pyplot.xlim([0,40.])
-    matplotlib.pyplot.ylim([0,40.])
-    matplotlib.pyplot.xlabel('diurnal cycle',fontsize=24)
-    matplotlib.pyplot.ylabel('growth phase',fontsize=24)
-
-    # aspect
-    matplotlib.pyplot.tight_layout()
-    matplotlib.pyplot.axes().set_aspect('equal')
-    
-    
-    matplotlib.pyplot.savefig('figures/sampleLocation.prob.%s.png'%(str(int(flag))))
-    matplotlib.pyplot.clf()
-
-    sys.exit()
-
-    return None
-
-def oneDimensionTimeMapper():
-
-    '''
-    this function maps samples into 1D space and plots them as a time series
-    '''
-
-    epsilon=0.1
-    theSize=15
-    theAlpha=.6
-    
-    # f.1. building a structure holding samples as a time series
-    co2levels=[300,1000]
-    epochs=[0,1,2]
-    growths=['exp','sta']
-    diurnals=['AM','PM']
-
-    for co2level in co2levels:
-        orderedSamples={}
-        time=0
-        for epoch in epochs:
-            for growth in growths:
-                for diurnal in diurnals:
-                    time=time+1
-                    for sampleID in metaData.keys():
-                        if metaData[sampleID]['co2'] == co2level and metaData[sampleID]['epoch'] == epoch and metaData[sampleID]['growth'] == growth and metaData[sampleID]['diurnal'] == diurnal:
-                            if time in orderedSamples:
-                                orderedSamples[time].append(sampleID)
-                            else:
-                                orderedSamples[time]=[sampleID]
-            
-        # f.2. computing distances and building trajectories for each co2 condition
-        timePoints=orderedSamples.keys()
-        timePoints.sort()
-        for timePoint in timePoints:
-            samples=orderedSamples[timePoint]
-
-            yPoints=[]
-            for sampleID in samples:
-                
-                yPos=distanceCalculator(sampleID)
-
-                # selecting position and color
-                if metaData[sampleID]['replicate'] == 'A':
-                    xPos=timePoint-epsilon
-                    if co2level == 300:
-                        theColor='lightblue'
-                    else:
-                        theColor='salmon'
-                elif metaData[sampleID]['replicate'] == 'B':
-                    xPos=timePoint
-                    if co2level == 300:
-                        theColor='blue'
-                    else:
-                        theColor='red'
-                elif metaData[sampleID]['replicate'] == 'C':
-                    xPos=timePoint+epsilon
-                    if co2level == 300:
-                        theColor='darkblue'
-                    else:
-                        theColor='darkred'
-                else:
-                    print 'error choosing the replicates from oneDimensionTimeMapper. exiting...'
-                    sys.exit()
-            
-                # actual plotting the dots
-                matplotlib.pyplot.plot(xPos,yPos,marker='.',color=theColor,ms=theSize,alpha=theAlpha,mew=0.,zorder=1)
-                yPoints.append(yPos)
-            # plotting the bars
-            average=numpy.mean(yPoints)
-            if co2level == 300:
-                theColor='blue'
-            else:
-                theColor='red'
-            matplotlib.pyplot.plot([timePoint-epsilon,timePoint+epsilon],[average,average],'-',color=theColor,lw=2,zorder=2)
-             
-    # f.3. finishing up the figure
-    matplotlib.pyplot.plot([1,12],[1.5,1.5],color='black',ls=':')
-    matplotlib.pyplot.plot([1,12],[1.,1.],color='magenta',ls='--')
-    matplotlib.pyplot.plot([1,12],[-1.,-1.],color='magenta',ls='--')
-    matplotlib.pyplot.plot([4.5,4.5],[-1.5,2],color='black',alpha=0.2,ls='--')
-    matplotlib.pyplot.plot([8.5,8.5],[-1.5,2],color='black',alpha=0.2,ls='--')
-    
-    matplotlib.pyplot.xlabel('epoch',fontsize=24)
-    matplotlib.pyplot.ylabel('state',fontsize=24)
-    matplotlib.pyplot.subplots_adjust(left=0.2, right=0.95, top=0.9, bottom=0.11)
-
-    matplotlib.pyplot.xticks((2.5,6.5,10.5),('0','1','2'))
-    matplotlib.pyplot.yticks((-1.5,0.,1.5),('inverse','misregulation','expected'))
-
-    matplotlib.pyplot.xlim([0,13])
-    matplotlib.pyplot.ylim([-1.5,2])
-    
-    matplotlib.pyplot.savefig('figures/distance.pdf')
-    matplotlib.pyplot.clf()
-
     return None
 
 def setBoxColors(bp,theColor):
@@ -1137,10 +979,10 @@ def weightRankCalculator(geneID,descriptors):
 ### MAIN
 
 # 0. preliminaries
-print
-print 'welcome to sampleMapper'
-print
-print 'initializing variables...'
+print('')
+print('welcome to sampleMapper')
+print('')
+print('initializing variables...')
 # 0.1. user defined variables and paths
 cuffdiffDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cuffdiff/'
 expressionFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/allSamples/genes.fpkm_table.v2.txt'
@@ -1157,69 +999,58 @@ metaData=metadataReader()
 expression=expressionReader()
 
 # 1. selecting descriptors
-print
-print 'selecting state descriptors...'
+print('')
+print('selecting state descriptors...')
 
 # 1.1. recover the DET genes
-print 'recovering DETs...'
+print('recovering DETs...')
 
 diurnalDescriptors=descriptorsRetriever('light_epoch0')
-print len(diurnalDescriptors),'diurnal descriptors detected.'
+print(len(diurnalDescriptors),'diurnal descriptors detected.')
 
 growthDescriptors=descriptorsRetriever('growth_epoch0')
-print len(growthDescriptors),'growth descriptors detected.'
+print(len(growthDescriptors),'growth descriptors detected.')
 
 # 1.2. filtering the descriptors based on separation
-print
-print 'computing descriptors based on separation rules...'
+print('')
+print('computing descriptors based on separation rules...')
 diurnalFilteredDescriptors=descriptorsFilter(diurnalDescriptors,'diurnal')
 growthFilteredDescriptors=descriptorsFilter(growthDescriptors,'growth')
-print len(diurnalFilteredDescriptors),'filtered diurnal descriptors.'
-print len(growthFilteredDescriptors),'filtered growth descriptors.'
-print
+print(len(diurnalFilteredDescriptors),'filtered diurnal descriptors.')
+print(len(growthFilteredDescriptors),'filtered growth descriptors.')
+print('')
 
 # 1.3. plotting a boxplots of the best descriptors
-print 'computing the border values for the descriptors...'
+print('computing the border values for the descriptors...')
 borders={}
 borders=bordersCalculator(diurnalFilteredDescriptors,borders,'diurnal')
 borders=bordersCalculator(growthFilteredDescriptors,borders,'growth')
 
 # 1.4. saving the descriptors
-print 'writing the descriptors...'
+print('writing the descriptors...')
 descriptorsWriter(diurnalFilteredDescriptors,'diurnal')
 descriptorsWriter(growthFilteredDescriptors,'growth')
 
 # 1.5. plotting the boxplots
 if boxplotPlotting == True:
-    print 'plotting expression graphs for descriptors...'
+    print('plotting expression graphs for descriptors...')
     boxPlotGrapher(diurnalFilteredDescriptors,borders,'diurnal')
     boxPlotGrapher(growthFilteredDescriptors,borders,'growth')
 
 # 2. map samples into a new space of dark/light distributed in x:-2:-1/1:2 and stationary/exponential y:-2:-1/1:2
-print
-print 'mapping samples into new space...'
+print('')
+print('mapping samples into new space...')
 newSpaceMapper('300')
-print
+print('')
 newSpaceMapper('1000')
 
 # 3. generating plots of condition dispersion
-print
-print 'computing sample distances...'
+print('')
+print('computing sample distances...')
 distanceQuantifier('300')
 distanceQuantifier('1000')
 
-
-# 3. map samples into a new space in a probability manner
-#print
-#print 'mapping samples into a probabilistic space...'
-#newSpaceProbabilisticMapper('300')
-#sys.exit()
-
-# 3. map samples into a 1D variable
-#print 'mapping samples into 1D space...'
-#oneDimensionTimeMapper()
-
 # 4. final message
-print
-print '... analysis completed.'
-print
+print('')
+print('... analysis completed.')
+print('')
