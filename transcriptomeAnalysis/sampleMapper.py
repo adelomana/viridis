@@ -5,6 +5,7 @@ import scipy.stats,scipy.spatial
 import matplotlib.pyplot
 from matplotlib.patches import Ellipse
 matplotlib.rcParams['pdf.fonttype']=42 # this cryptical line is necessary for Illustrator compatibility of text saved as pdf
+import library
 
 def addArrows():
 
@@ -479,7 +480,6 @@ def distanceQuantifier(flag):
                 statistic,pvalue=scipy.stats.mannwhitneyu(a,b)
                 print(flag,i+1,j+1,statistic,pvalue)
 
-
     return None
 
 def ellipseSizeCalculator(flag1,flag2):
@@ -522,31 +522,6 @@ def ellipseSizeCalculator(flag1,flag2):
     print('dispersion found for',flag1,flag2,'conditions: ',averageDispersion)
 
     return averageDispersion
-
-def expressionReader():
-
-    '''
-    this function reads the matrix of expression in FPKM into the format of a dictionary
-    '''
-
-    expression={}
-    with open(expressionFile,'r') as f:
-        header=f.readline()
-        prelabels=header.split('\t')[1:]
-        labels=[element.split('_')[0] for element in prelabels]
-        next(f)
-        for line in f:
-            vector=line.split('\t')
-
-            geneName=vector[0]
-            expression[geneName]={}
-            
-            preValues=vector[1:]
-            values=[float(element) for element in preValues]
-            for i in range(len(values)):
-                expression[geneName][labels[i]]=values[i]
-
-    return expression
 
 def expressionRetriever(descriptors,flag,condition):
 
@@ -691,39 +666,6 @@ def loadCalculator(sampleID,flag):
         W.append(w)
 
     return averageLoad,A,W
-
-def metadataReader():
-
-    '''
-    this function returns a dictionary with the metadata of the expression data
-    '''
-    
-    metaData={}
-
-    with open(metaDataFile,'r') as f:
-        next(f)
-        for line in f:
-            vector=line.split('\t')
-            if vector[4] != '':
-
-                sampleID=vector[6]
-                if vector[0] != '':
-                    epoch=int(vector[0])
-                growth=vector[1]
-                diurnal=vector[2]
-                co2=int(vector[3].replace(',',''))
-                replicate=vector[4]
-                preCollapse=bool(int(vector[5]))
-
-                metaData[sampleID]={}
-                metaData[sampleID]['growth']=growth
-                metaData[sampleID]['epoch']=epoch
-                metaData[sampleID]['diurnal']=diurnal
-                metaData[sampleID]['co2']=co2
-                metaData[sampleID]['replicate']=replicate
-                metaData[sampleID]['pre-collapse']=preCollapse
-
-    return metaData
 
 def newCoordinateCalculator(sampleID):
 
@@ -895,37 +837,6 @@ def setBoxColors(bp,theColor):
 
     return None
 
-def sampleOrderer(co2level):
-
-    '''
-    this function order samples timewise
-    '''
-
-    epochs=[0,1,2]
-    growths=['exp','sta']
-    diurnals=['AM','PM']
-
-    orderedSamples={}
-    time=0
-    timeLabels=[]
-    for epoch in epochs:
-        for growth in growths:
-            for diurnal in diurnals:
-                time=time+1
-                for sampleID in metaData.keys():
-                    if metaData[sampleID]['co2'] == co2level and metaData[sampleID]['epoch'] == epoch and metaData[sampleID]['growth'] == growth and metaData[sampleID]['diurnal'] == diurnal:
-
-                        timeLabel=diurnal+'.'+growth+'.'+str(epoch+1)
-                        if timeLabel not in timeLabels:
-                            timeLabels.append(timeLabel)
-                            
-                        if time in orderedSamples:
-                            orderedSamples[time].append(sampleID)
-                        else:
-                            orderedSamples[time]=[sampleID]
-
-    return orderedSamples
-
 def weightedHistogrammer(scores,scoresWeights):
 
     '''
@@ -993,10 +904,10 @@ time300=numpy.array([1.375,1.625,3.375,3.708333333,5.291666667,5.708333333,7.333
 time1000=numpy.array([1.375,1.625,3.375,3.708333333,5.291666667,5.708333333,7.333333333,7.75,15.45833333,15.79166667,17.41666667,17.79166667])
 
 # 0.2. reading metadata
-metaData=metadataReader()
+metaData=library.metadataReader(metaDataFile)
 
 # 0.3. reading expression
-expression=expressionReader()
+expression=library.expressionReader(expressionFile)
 
 # 1. selecting descriptors
 print('')

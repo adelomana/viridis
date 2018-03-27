@@ -3,6 +3,7 @@
 import sys,numpy,matplotlib,random,pickle
 from matplotlib import pyplot
 from matplotlib.patches import Ellipse
+import library
 
 def bordersCalculator(descriptors,borders,flag):
 
@@ -639,7 +640,7 @@ expressionFile='../data/GSE45252_value_Matrix.txt'
 boxplotPlotting=True
 
 # 0.2. reading metadata
-metaData=metadataReader()
+metaData=library.metadataReader()
 
 # 0.3. reading expression
 expression=expressionReader()
