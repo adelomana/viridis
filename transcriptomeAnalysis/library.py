@@ -1,3 +1,34 @@
+import os
+
+def cuffdiffCaller(bamFilesA,bamFilesB,label,cuffdiffDir,gtfFile,fastaFile,numberOfThreads):
+
+    '''
+    This function calls cuffdiff to compute statistical test about expression differences.
+    '''
+    
+    outputDir=cuffdiffDir+label+'/'
+        
+    term1='cuffdiff %s '%(gtfFile)
+    term2='-o %s '%outputDir
+    term3='-p %s '%numberOfThreads
+    term4='--library-type fr-firststrand '
+    term5='--multi-read-correct '
+    term6='-b %s '%fastaFile
+    
+    term8a=','.join(bamFilesA)
+    term8b=','.join(bamFilesB)
+    term8=term8a+' '+term8b
+
+    cmd=term1+term2+term3+term4+term5+term6+term8
+
+    print()
+    print(cmd)
+    print()
+
+    os.system(cmd)
+
+    return None
+
 def expressionReader(expressionFile):
 
     '''
@@ -56,6 +87,8 @@ def metadataReader(metaDataFile):
 
     return metaData
 
+
+
 def sampleOrderer(co2level,metadata):
 
     '''
@@ -86,3 +119,25 @@ def sampleOrderer(co2level,metadata):
                             orderedSamples[time]=[sampleID]
 
     return orderedSamples
+
+def samples2bamfiles(samplesA,samplesB,bamFilesDir):
+
+    '''
+    This function builds the full path of the BAM files.
+    '''
+
+    verboseBamDirs=os.listdir(bamFilesDir)
+
+    bamFilesA=[]
+    for sample in samplesA:
+        matching = [s for s in verboseBamDirs if sample in s]
+        fullName=matching[0]
+        bamFilesA.append(bamFilesDir+fullName+'/Aligned.sortedByCoord.out.bam')
+
+    bamFilesB=[]
+    for sample in samplesB:
+        matching = [s for s in verboseBamDirs if sample in s]
+        fullName=matching[0]
+        bamFilesB.append(bamFilesDir+fullName+'/Aligned.sortedByCoord.out.bam')
+
+    return bamFilesA,bamFilesB
