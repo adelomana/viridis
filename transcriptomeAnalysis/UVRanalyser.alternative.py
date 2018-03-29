@@ -49,64 +49,59 @@ def cuffdiffReader(dir):
 
     return DETs
 
-def hypothesisTestingRunner():
+def hypothesisTestingRunner(label):
 
     '''
     This function calls cuffdiff to run sample comparisons.
     '''
 
-    # f.1. detect DETs between epoch 0 and 1 in LC
-
-    # f.1.1. define DETs between exp
+    # f.1. define DETs between exp AM
     samplesA=[]; samplesB=[]
     for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
+        if metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
             samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
+        elif metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
             samplesB.append(sampleID)
 
     print(samplesA,samplesB)
     bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.300.exp.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
+    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.alternative.{}.exp.AM.epoch0.vs.epoch1'.format(label),cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
 
-    # f.1.2. define DETs in sta
+    # f.2. define DETs between exp PM
     samplesA=[]; samplesB=[]
     for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
+        if metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'PM' and metadata[sampleID]['growth'] == 'exp':
             samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
+        elif metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'PM' and metadata[sampleID]['growth'] == 'exp':
             samplesB.append(sampleID)
 
     print(samplesA,samplesB)
     bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.300.sta.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
+    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.alternative.{}.exp.PM.epoch0.vs.epoch1'.format(label),cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
 
-
-    # f.2. detect DETs between epoch 0 and 1 in HC
-
-    # f.2.1. define DETs between exp
+    # f.3. define DETs between sta AM
     samplesA=[]; samplesB=[]
     for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
+        if metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
             samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
+        elif metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
             samplesB.append(sampleID)
 
     print(samplesA,samplesB)
     bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.1000.exp.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
+    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.alternative.{}.sta.AM.epoch0.vs.epoch1'.format(label),cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
 
-    # f.2.2. define DETs in sta
+   # f.4. define DETs between sta PM
     samplesA=[]; samplesB=[]
     for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
+        if metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'PM' and metadata[sampleID]['growth'] == 'sta':
             samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
+        elif metadata[sampleID]['co2'] == label and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'PM' and metadata[sampleID]['growth'] == 'sta':
             samplesB.append(sampleID)
 
     print(samplesA,samplesB)
     bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.1000.sta.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
+    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.alternative.{}.sta.PM.epoch0.vs.epoch1'.format(label),cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
 
     return None
 
@@ -132,13 +127,13 @@ def uvrRespondingGenesReader():
 ###
 
 # 0. user defined variables
-expressionFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/allSamples/genes.fpkm_table.v2.txt'
-metaDataFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/metadata/metadata.v2.tsv'
-uvrRespondingGenesFile='/Volumes/omics4tb/alomana/projects/dtp/data/functionalAnnotation/UVR_Responsive_Genes.csv'
-bamFilesDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/bamFiles/'
-cuffdiffDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cuffdiff/'
-gtfFile='/Volumes/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.gff3'
-fastaFile='/Volumes/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.dna.genome.fa'
+expressionFile='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/allSamples/genes.fpkm_table.v2.txt'
+metaDataFile='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/metadata/metadata.v2.tsv'
+uvrRespondingGenesFile='/proj/omics4tb/alomana/projects/dtp/data/functionalAnnotation/UVR_Responsive_Genes.csv'
+bamFilesDir='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/bamFiles/'
+cuffdiffDir='/proj/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cuffdiff/'
+gtfFile='/proj/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.gff3'
+fastaFile='/proj/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.dna.genome.fa'
 numberOfThreads=16 
 
 # 1. read data
@@ -155,8 +150,11 @@ sortedGeneNames.sort()
 uvrGenes=uvrRespondingGenesReader()
 
 # 2. run hypotheses testing
-#print('running hypotheses testing...')
-#hypothesisTestingRunner()
+print('running hypotheses testing...')
+hypothesisTestingRunner(300)
+hypothesisTestingRunner(1000)
+
+sys.exit()
 
 # 3. make the intersect
 print('defining consistency and intersect...')
