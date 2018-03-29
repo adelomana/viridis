@@ -3,112 +3,34 @@
 ### It compares if there is consistent (exp AND sta) differential expression in epoch 0 vs 1, and this set of UVR-responding genes is different in HC vs LC.
 ###
 
-import sys
+import sys,numpy
+import scipy,scipy.stats
+import matplotlib,matplotlib.pyplot
 import library
 
-def consistencyFinder(label):
+matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
+matplotlib.rcParams['pdf.fonttype']=42
+
+def histogrammer(theData):
 
     '''
-    This function reads the output of cuffdiff and finds sets of genes in common with other cuffdiff runs.
+    this function creates a histogram.
     '''
 
-    # read exp DETs
-    dir=cuffdiffDir+'uvr.{}.exp.epoch0.vs.epoch1'.format(label)
-    exp=cuffdiffReader(dir)
-    
-    # read sta DETs
-    dir=cuffdiffDir+'uvr.{}.sta.epoch0.vs.epoch1'.format(label)
-    sta=cuffdiffReader(dir)
-    
-    # define common set
-    con=list(set(exp) & set(sta))
+    n,bins=numpy.histogram(theData,bins=int(numpy.sqrt(len(theData))))
 
-    return exp,sta,con
+    x=[]
+    halfBin=(bins[1]-bins[0])/2.
+    for bin in bins:
+        center=bin+halfBin
+        x.append(center)
+    x.pop()
 
-def cuffdiffReader(dir):
+    y=[]
+    y=numpy.array(n)
+    y=list(y/float(sum(y)))
 
-    '''
-    This function reads cuffdiff output and selects DETs.
-    '''
-
-    DETs=[]
-    with open(dir+'/isoform_exp.diff','r') as f:
-        next(f)
-        for line in f:
-            vector=line.split('\t')
-
-            transcriptName=vector[0]
-            expressionA=vector[7]
-            expressionB=vector[8]
-            foldChange=vector[9]
-            pValue=vector[11]
-            significance=vector[13].replace('\n','')
-                
-            if significance == 'yes':
-                DETs.append(transcriptName)
-
-    return DETs
-
-def hypothesisTestingRunner():
-
-    '''
-    This function calls cuffdiff to run sample comparisons.
-    '''
-
-    # f.1. detect DETs between epoch 0 and 1 in LC
-
-    # f.1.1. define DETs between exp
-    samplesA=[]; samplesB=[]
-    for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
-            samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
-            samplesB.append(sampleID)
-
-    print(samplesA,samplesB)
-    bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.300.exp.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
-
-    # f.1.2. define DETs in sta
-    samplesA=[]; samplesB=[]
-    for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
-            samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 300 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
-            samplesB.append(sampleID)
-
-    print(samplesA,samplesB)
-    bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.300.sta.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
-
-
-    # f.2. detect DETs between epoch 0 and 1 in HC
-
-    # f.2.1. define DETs between exp
-    samplesA=[]; samplesB=[]
-    for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
-            samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'exp':
-            samplesB.append(sampleID)
-
-    print(samplesA,samplesB)
-    bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.1000.exp.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
-
-    # f.2.2. define DETs in sta
-    samplesA=[]; samplesB=[]
-    for sampleID in metadata.keys():
-        if metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 0 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
-            samplesA.append(sampleID)
-        elif metadata[sampleID]['co2'] == 1000 and metadata[sampleID]['epoch'] == 1 and metadata[sampleID]['diurnal'] == 'AM' and metadata[sampleID]['growth'] == 'sta':
-            samplesB.append(sampleID)
-
-    print(samplesA,samplesB)
-    bamFilesA,bamFilesB=library.samples2bamfiles(samplesA,samplesB,bamFilesDir)
-    library.cuffdiffCaller(bamFilesA,bamFilesB,'uvr.1000.sta.epoch0.vs.epoch1',cuffdiffDir,gtfFile,fastaFile,numberOfThreads)
-
-    return None
+    return x,y
 
 def uvrRespondingGenesReader():
 
@@ -135,11 +57,6 @@ def uvrRespondingGenesReader():
 expressionFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/allSamples/genes.fpkm_table.v2.txt'
 metaDataFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/metadata/metadata.v2.tsv'
 uvrRespondingGenesFile='/Volumes/omics4tb/alomana/projects/dtp/data/functionalAnnotation/UVR_Responsive_Genes.csv'
-bamFilesDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/bamFiles/'
-cuffdiffDir='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cuffdiff/'
-gtfFile='/Volumes/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.gff3'
-fastaFile='/Volumes/omics4tb/alomana/projects/dtp/data/ensembl/Thalassiosira_pseudonana.ASM14940v1.29.dna.genome.fa'
-numberOfThreads=16 
 
 # 1. read data
 print('reading data...')
@@ -155,30 +72,81 @@ sortedGeneNames.sort()
 uvrGenes=uvrRespondingGenesReader()
 
 # 2. run hypotheses testing
-#print('running hypotheses testing...')
-#hypothesisTestingRunner()
+epochs=[0,1]
+growths=['exp','sta']
+diurnals=['AM','PM']
 
-# 3. make the intersect
-print('defining consistency and intersect...')
+diffUVR=[]; diffnoUVR=[]
 
-# 3.1. define consistency in exp and sta for each condition
-expLC,staLC,conLC=consistencyFinder(300)
-expHC,staHC,conHC=consistencyFinder(1000)
+for gene in uvrGenes:
+    name='gene:Thaps{}'.format(gene)
+    print('working with gene {}...'.format(name))
 
-print('Detected {} DETs in exp LC.'.format(len(expLC)))
-print('Detected {} DETs in sta LC.'.format(len(staLC)))
-print('Consistent set: {} DETs.'.format(len(conLC)))
-print()
-print('Detected {} DETs in exp HC.'.format(len(expHC)))
-print('Detected {} DETs in sta HC.'.format(len(staHC)))
-print('Consistent set: {} DETs.'.format(len(conHC)))
-print()
+    # 2.1. find trajectory for LC
+    orderedExpressionLC=[]
+    co2level=300
 
-# 3.2. define comparison between LC and HC
-a=list(set(expLC) & set(conHC))
-print(len(a))
+    for epoch in epochs:
+        for growth in growths:
+            for diurnal in diurnals:
+                
+                localExpression=[]
+                for sampleID in metadata.keys():
+                    if metadata[sampleID]['co2'] == co2level and metadata[sampleID]['epoch'] == epoch and metadata[sampleID]['growth'] == growth and metadata[sampleID]['diurnal'] == diurnal:
+                        value=expression[name][sampleID]
+                        localExpression.append(value)
+                orderedExpressionLC.append(localExpression)
+                
+    # 2.2. find trajectory for HC
+    orderedExpressionHC=[]
+    co2level=1000
 
-# 3.2.1. for all genes
+    for epoch in epochs:
+        for growth in growths:
+            for diurnal in diurnals:
+                
+                localExpression=[]
+                for sampleID in metadata.keys():
+                    if metadata[sampleID]['co2'] == co2level and metadata[sampleID]['epoch'] == epoch and metadata[sampleID]['growth'] == growth and metadata[sampleID]['diurnal'] == diurnal:
+                        value=expression[name][sampleID]
+                        localExpression.append(value)
+                orderedExpressionHC.append(localExpression)
 
-# 3.2.2. for UVR genes
+    # 2.3. find differences
+    LC=numpy.array(orderedExpressionLC)
+    HC=numpy.array(orderedExpressionHC)
 
+    mLC=numpy.mean(LC,axis=1)
+    mHC=numpy.mean(HC,axis=1)
+
+    log2fcLC=numpy.log2(mLC/mLC[0])
+    log2fcHC=numpy.log2(mHC/mLC[0])
+
+    # adding differences
+    noUVR=log2fcHC[0:4]-log2fcLC[0:4]
+    UVR=log2fcHC[4:]-log2fcLC[4:]
+
+    for i in range(len(noUVR)):
+        if numpy.isnan(UVR[i]) == False:
+            diffUVR.append(UVR[i])
+        if numpy.isnan(noUVR[i]) == False:
+            diffnoUVR.append(noUVR[i])
+
+# 3. compute the difference between UVR and no UVR and plot a histogram
+statistic,pvalue=scipy.stats.ttest_ind(diffUVR,diffnoUVR)
+print(statistic,pvalue)
+
+x,y=histogrammer(diffnoUVR)
+matplotlib.pyplot.plot(x,y,'-',color='green',lw=2,label='Stage 1')
+
+x,y=histogrammer(diffUVR)
+matplotlib.pyplot.plot(x,y,'-',color='magenta',lw=2,label='Stage 2')
+
+matplotlib.pyplot.xlabel('Carbon response [log$_2$ FC (HC) - log$_2$ FC (LC)]')
+matplotlib.pyplot.ylabel('Probability density function')
+
+matplotlib.pyplot.legend(markerscale=1.5,framealpha=1,loc=1,fontsize=18)
+
+matplotlib.pyplot.tight_layout()
+matplotlib.pyplot.savefig('histogram.pdf')
+matplotlib.pyplot.clf()
