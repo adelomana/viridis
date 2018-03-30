@@ -3,18 +3,11 @@
 ###
 
 import sys,numpy
-import scipy,scipy.stats,scipy.optimize
 import matplotlib,matplotlib.pyplot
 import library
 
 matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
 matplotlib.rcParams['pdf.fonttype']=42
-
-def logNormalDistribution(x,s,loc,scale):
-
-    return scipy.stats.gamma.pdf(x,s,loc,scale)
-    #return s * numpy.exp(-loc * x) + scale
-    #return scipy.stats.norm.pdf(x, loc, scale)
 
 def histogrammer(theData):
 
@@ -35,7 +28,7 @@ def histogrammer(theData):
     y=numpy.array(n)
     y=list(y/float(sum(y)))
 
-    #y=numpy.cumsum(y)
+    y=numpy.cumsum(y)
 
     return x,y
 
@@ -72,7 +65,6 @@ diurnals=['AM','PM']
 for co2level in co2levels:
     margins[co2level]=[]
     for epoch in epochs:
-        localMargins=[]
         for growth in growths:
             for diurnal in diurnals:
                 print(co2level,epoch,growth,diurnal)
@@ -82,6 +74,7 @@ for co2level in co2levels:
                     if metadata[sampleID]['co2'] == co2level and metadata[sampleID]['epoch'] == epoch and metadata[sampleID]['growth'] == growth and metadata[sampleID]['diurnal'] == diurnal:
                         sampleIDs.append(sampleID)
                 # fill the margin array
+                localMargins=[]
                 for geneName in sortedGeneNames:
                     m=[]
                     for sampleID in sampleIDs:
@@ -93,33 +86,19 @@ for co2level in co2levels:
                         # removing low expressed transcripts
                         if min(m) >= 1:
                             localMargins.append(margin)
-        if len(localMargins) != 0:
-            print(len(localMargins))
-            # remove 2.5% at each side
-            localMargins.sort()
-            extreme=int(len(localMargins)*0.025)-1
-            trimmedLocalMargins=localMargins[extreme:-extreme]
-            # compute PDF
-            x,y=histogrammer(trimmedLocalMargins)
-            margins[co2level].append([x,y])
+                if len(localMargins) != 0:
+                    # remove 2.5% at each side
+                    localMargins.sort()
+                    extreme=int(len(localMargins)*0.025)-1
+                    trimmedLocalMargins=localMargins[extreme:-extreme]
+                    # compute PDF
+                    x,y=histogrammer(trimmedLocalMargins)
+                    margins[co2level].append([x,y])
     # 3. plotting figures
     for i in range(len(margins[co2level])):
         curve=margins[co2level][i]
-        matplotlib.pyplot.plot(curve[0],curve[1],'.',color=matplotlib.cm.tab10(i),label=i)
-
+        matplotlib.pyplot.plot(curve[0],curve[1],'-',color=matplotlib.cm.tab20(i),label=i)
         # fit a log-normal distribution
-        x=numpy.linspace(min(curve[0]),max(curve[0]),100)
-        guess=(2, 0, 400)
-        
-        matplotlib.pyplot.plot(x,logNormalDistribution(x,guess[0],guess[1],guess[2]),'r-')
-
-        #popt,pcov=scipy.optimize.curve_fit(logNormalDistribution,curve[0],curve[1],maxfev = 8000)
-        #print('guess',guess)
-        #print('minima',popt)
-        
-        #matplotlib.pyplot.plot(x,logNormalDistribution(x,popt[0],popt[1],popt[2]),'k-')
-
-        
         
     # close figure
     figureName='figure.{}.pdf'.format(co2level)
@@ -127,6 +106,4 @@ for co2level in co2levels:
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(figureName)
     matplotlib.pyplot.clf()
-
-    sys.exit()
     
