@@ -1,16 +1,40 @@
 ###
-### This script tracks the variability of gene expression.
-### We look for genes that have increase in variability. The pattern should be 01 and 001 for LC and HC respectively.
+### This script tracks the margin of gene expression for each gene along different conditions.
 ###
 
 import sys,numpy
+import matplotlib,matplotlib.pyplot
 import library
+
+matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
+matplotlib.rcParams['pdf.fonttype']=42
+
+def histogrammer(theData):
+
+    '''
+    This function creates a histogram.
+    '''
+
+    n,bins=numpy.histogram(theData,bins=int(numpy.sqrt(len(theData))))
+
+    x=[]
+    halfBin=(bins[1]-bins[0])/2.
+    for bin in bins:
+        center=bin+halfBin
+        x.append(center)
+    x.pop()
+
+    y=[]
+    y=numpy.array(n)
+    y=list(y/float(sum(y)))
+
+    return x,y
 
 ###
 ### MAIN
 ###
 
-print('\nwelcome to varianceTracker...\n')
+print('\nwelcome to marginTracker...\n')
 
 # 0. user defined variables
 expressionFile='/Volumes/omics4tb/alomana/projects/dtp/data/expression/tippingPoints/cufflinks/allSamples/genes.fpkm_table.v2.txt'
@@ -29,63 +53,55 @@ sortedGeneNames.sort()
 # 2. analysis
 print('performing analysis...')
 
-# 2.1. define the ordered set of conditions
-samples300=library.sampleOrderer(300,metadata)
-samples1000=library.sampleOrderer(1000,metadata)
+margins={}
 
-# 2.2. iterate over genes
-print('\t iterating {} genes...'.format(len(sortedGeneNames)))
-candidates={}
-for geneName in sortedGeneNames:
+co2levels=[300,1000]
+epochs=[0,1,2]
+growths=['exp','sta']
+diurnals=['AM','PM']
 
-    # define LC expression
-    y300=[]
-    for condition in sorted(samples300.keys()):
-        y=[]
-        for sampleID in samples300[condition]:
-            expressionValue=expression[geneName][sampleID]
-            y.append(expressionValue)
-        y300.append(y)
-
-    # define HC expression
-    y1000=[]
-    for condition in sorted(samples1000.keys()):
-        y=[]
-        for sampleID in samples1000[condition]:
-            expressionValue=expression[geneName][sampleID]
-            y.append(expressionValue)
-        y1000.append(y)
-
-    # format expressions
-    E300=numpy.array(y300)
-    E1000=numpy.array(y1000)
-
-    print(E300)
-    print(E1000)
-    
-    mE300=numpy.mean(E300,axis=1)
-    mE1000=numpy.mean(E1000,axis=1)
-
-    print(E300,mE300)
-    print(E1000,mE1000)
-    
-    #sE300=numpy.sds(E300,axis=1); sE1000=numpy.sds(E1000,axis=1)
-
-    #maxE300=numpy.max(mE300); maxE1000=numpy.max(mE1000)
-
-    # filter out genes whose maximum expression is below 10. FPKMs
-    if max([maxE300,maxE1000]) > 10:
-        print(geneName)
-        print(mE300)
-        print(mE1000)
-        print()
-    else:
-        print('Excluding {} because low expression...')
-        print(mE300)
-        print(mE1000)
-        print()
-    
-    
-    # filter out genes whose abs(log2 FC) < 1
-    
+for co2level in co2levels:
+    margins[co2level]=[]
+    for epoch in epochs:
+        for growth in growths:
+            for diurnal in diurnals:
+                print(co2level,epoch,growth,diurnal)
+                # obtain the replicate sample IDs
+                sampleIDs=[]
+                for sampleID in metadata.keys():
+                    if metadata[sampleID]['co2'] == co2level and metadata[sampleID]['epoch'] == epoch and metadata[sampleID]['growth'] == growth and metadata[sampleID]['diurnal'] == diurnal:
+                        sampleIDs.append(sampleID)
+                # fill the margin array
+                localMargins=[]
+                for geneName in sortedGeneNames:
+                    m=[]
+                    for sampleID in sampleIDs:
+                        value=expression[geneName][sampleID]
+                        logValue=numpy.log10(value+1)
+                        m.append(logValue)
+                    if m != []:
+                        margin=max(m)-min(m)
+                        # removing low expressed transcripts
+                        if min(m) >= 1:
+                            localMargins.append(margin)
+                if len(localMargins) != 0:
+                    # remove 2.5% at each side
+                    localMargins.sort()
+                    extreme=int(len(localMargins)*0.025)-1
+                    trimmedLocalMargins=localMargins[extreme:-extreme]
+                    # compute PDF
+                    x,y=histogrammer(trimmedLocalMargins)
+                    margins[co2level].append([x,y])
+    # 3. plotting figures
+    for i in range(len(margins[co2level])):
+        curve=margins[co2level][i]
+        matplotlib.pyplot.plot(curve[0],curve[1],'-',color=matplotlib.cm.tab20(i),label=i)
+        # fit a log-normal distribution
+        
+    # close figure
+    figureName='figure.{}.pdf'.format(co2level)
+    matplotlib.pyplot.legend(markerscale=1.5,framealpha=1,loc=1,fontsize=12)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig(figureName)
+    matplotlib.pyplot.clf()
     

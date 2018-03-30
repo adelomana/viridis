@@ -1,6 +1,6 @@
 ###
 ### This script compares the UVR-response genes in HC vs LC.
-### It compares if there is consistent (exp AND sta) differential expression in epoch 0 vs 1, and this set of UVR-responding genes is different in HC vs LC.
+### It compares if there is consistent expression difference in epoch 0 vs 1 with respect to HC and LC on UVR-response genes.
 ###
 
 import sys,numpy
