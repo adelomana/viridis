@@ -3,18 +3,13 @@
 ###
 
 import sys,numpy
-import scipy,scipy.stats,scipy.optimize
+import scipy,scipy.stats,scipy.interpolate
 import matplotlib,matplotlib.pyplot
 import library
 
 matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
 matplotlib.rcParams['pdf.fonttype']=42
 
-def logNormalDistribution(x,s,loc,scale):
-
-    return scipy.stats.gamma.pdf(x,s,loc,scale)
-    #return s * numpy.exp(-loc * x) + scale
-    #return scipy.stats.norm.pdf(x, loc, scale)
 
 def histogrammer(theData):
 
@@ -34,8 +29,6 @@ def histogrammer(theData):
     y=[]
     y=numpy.array(n)
     y=list(y/float(sum(y)))
-
-    #y=numpy.cumsum(y)
 
     return x,y
 
@@ -104,29 +97,27 @@ for co2level in co2levels:
             margins[co2level].append([x,y])
     # 3. plotting figures
     for i in range(len(margins[co2level])):
+
         curve=margins[co2level][i]
-        matplotlib.pyplot.plot(curve[0],curve[1],'.',color=matplotlib.cm.tab10(i),label=i)
+        matplotlib.pyplot.plot(curve[0],curve[1],'.',color=matplotlib.cm.tab10(i),alpha=0.5,mew=0)
 
         # fit a log-normal distribution
+        #newF=scipy.interpolate.interp1d(curve[0],curve[1])
+        newF=scipy.interpolate.splrep(curve[0],curve[1], s=4.5e-5)
+
+        # compute the new fitted trajectory
         x=numpy.linspace(min(curve[0]),max(curve[0]),100)
-        guess=(2, 0, 400)
-        
-        matplotlib.pyplot.plot(x,logNormalDistribution(x,guess[0],guess[1],guess[2]),'r-')
+        newFit = scipy.interpolate.splev(x, newF, der=0)
 
-        #popt,pcov=scipy.optimize.curve_fit(logNormalDistribution,curve[0],curve[1],maxfev = 8000)
-        #print('guess',guess)
-        #print('minima',popt)
-        
-        #matplotlib.pyplot.plot(x,logNormalDistribution(x,popt[0],popt[1],popt[2]),'k-')
+        # plot
+        matplotlib.pyplot.plot(x,newFit,'-',lw=2,color=matplotlib.cm.tab10(i),label='Stage {}'.format(i+1))
 
-        
-        
     # close figure
+    matplotlib.pyplot.xlabel('Expression margin (log$_{10}$ FPKM)')
+    matplotlib.pyplot.ylabel('Probability')
+    
     figureName='figure.{}.pdf'.format(co2level)
     matplotlib.pyplot.legend(markerscale=1.5,framealpha=1,loc=1,fontsize=12)
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(figureName)
     matplotlib.pyplot.clf()
-
-    sys.exit()
-    
