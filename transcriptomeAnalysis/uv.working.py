@@ -11,7 +11,7 @@ import library
 matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
 matplotlib.rcParams['pdf.fonttype']=42
 
-def analysis(uvrGenes,verbose):
+def analysis(uvrGenes,verbose,plotting):
 
     '''
     This function computes the difference between Stage 2 and Stage 1 with respect to HC/LC fold change for UVR-response genes and others.
@@ -60,6 +60,9 @@ def analysis(uvrGenes,verbose):
         mLC=numpy.mean(LC,axis=1)
         mHC=numpy.mean(HC,axis=1)
 
+        stdDevLC=numpy.std(LC,axis=1)
+        stdDevHC=numpy.std(HC,axis=1)
+
         # f.2.4. discard any gene whose max expression does not reach 10 FPKM
         top=max([max(mLC),max(mHC)])
         if top < 10+1:
@@ -80,6 +83,25 @@ def analysis(uvrGenes,verbose):
             if geneName in uvrGenes:
                 effectsUVR.append(effect)
                 effectsUVRdict[geneName]=effect
+                # plotting if required
+                if plotting == True:
+                    figureFileName='figures/uvr.trajectory.{}.pdf'.format(geneName)
+                    xTickLabels=['exp.AM','exp.PM','sta.AM','sta.PM','exp.AM','exp.PM','sta.AM','sta.PM']
+                    x=[i for i in range(len(xTickLabels))]
+                    matplotlib.pyplot.plot(x[:4],mLC[:4],':',color='blue',lw=2,label='LC')
+                    matplotlib.pyplot.plot(x[:4],mHC[:4],':',color='red',lw=2,label='HC')
+                    matplotlib.pyplot.plot(x[4:],mLC[4:],':',color='blue',lw=2)
+                    matplotlib.pyplot.plot(x[4:],mHC[4:],':',color='red',lw=2)
+                    matplotlib.pyplot.errorbar(x,mLC,yerr=stdDevLC,fmt='o',color='blue')
+                    matplotlib.pyplot.errorbar(x,mHC,yerr=stdDevHC,fmt='o',color='red')
+                    matplotlib.pyplot.fill_between(x[:4],mHC[:4],mLC[:4],facecolor='green',alpha=0.2,edgecolor='None')
+                    matplotlib.pyplot.fill_between(x[4:],mHC[4:],mLC[4:],facecolor='orange',alpha=0.2,edgecolor='None')
+                    matplotlib.pyplot.xticks(x,xTickLabels)
+                    matplotlib.pyplot.ylabel('Expression (FPKM)')
+                    matplotlib.pyplot.legend(markerscale=1.5,framealpha=1,loc=2,fontsize=12)
+                    matplotlib.pyplot.tight_layout()
+                    matplotlib.pyplot.savefig(figureFileName)
+                    matplotlib.pyplot.clf()
             else:
                effectsNOUVR.append(effect)
 
@@ -87,7 +109,7 @@ def analysis(uvrGenes,verbose):
     if verbose == True:
         for element in sorted(effectsUVRdict,key=effectsUVRdict.get,reverse=True)[:5]:
             print('\t{}\t{}'.format(element,effectsUVRdict[element]))
-    
+
     return effectsUVR,effectsNOUVR,effectsUVRdict
 
 def crossValidation():
@@ -269,7 +291,7 @@ growths=['exp','sta']
 diurnals=['AM','PM']
 
 numberOfThreads=4
-crossValidationIterations=10000
+crossValidationIterations=1000
 
 # 1. read data
 print('reading data...')
@@ -287,19 +309,4 @@ print('\t found {} UVR response genes...'.format(len(uvrGenes)))
 
 # 2. perform analysis
 print('performing analysis...')
-effectsUVR,effectsNOUVR,effectsUVRdict=analysis(uvrGenes,verbose=True)
-
-# 3. plot one histogram for each set of genes, one for UVR-response genes, another for the rest
-print('plotting...')
-topThreshold,bottomThreshold=plotter()
-
-# 4. perform random sets of 101 genes and define the number of
-print('running cross-validation...')
-crossValidation()
-
-# 5. final message
-print('... done.')
-
-# make sure you have the trajectories
-
-
+effectsUVR,effectsNOUVR,effectsUVRdict=analysis(uvrGenes,verbose=True,plotting=True)
