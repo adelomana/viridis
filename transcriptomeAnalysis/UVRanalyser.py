@@ -11,7 +11,7 @@ import library
 matplotlib.rcParams.update({'font.size':18,'font.family':'Arial','xtick.labelsize':14,'ytick.labelsize':14})
 matplotlib.rcParams['pdf.fonttype']=42
 
-def analysis(uvrGenes,verbose):
+def analysis(uvrGenes,verbose,plotting):
 
     '''
     This function computes the difference between Stage 2 and Stage 1 with respect to HC/LC fold change for UVR-response genes and others.
@@ -80,6 +80,25 @@ def analysis(uvrGenes,verbose):
             if geneName in uvrGenes:
                 effectsUVR.append(effect)
                 effectsUVRdict[geneName]=effect
+                # plotting if required
+                if plotting == True:
+                    figureFileName='figures/uvr.trajectory.{}.pdf'.format(geneName)
+                    xTickLabels=['exp.AM','exp.PM','sta.AM','sta.PM','exp.AM','exp.PM','sta.AM','sta.PM']
+                    x=[i for i in range(len(xTickLabels))]
+                    matplotlib.pyplot.plot(x[:4],mLC[:4],':',color='blue',lw=2,label='LC')
+                    matplotlib.pyplot.plot(x[:4],mHC[:4],':',color='red',lw=2,label='HC')
+                    matplotlib.pyplot.plot(x[4:],mLC[4:],':',color='blue',lw=2)
+                    matplotlib.pyplot.plot(x[4:],mHC[4:],':',color='red',lw=2)
+                    matplotlib.pyplot.errorbar(x,mLC,yerr=stdDevLC,fmt='o',color='blue')
+                    matplotlib.pyplot.errorbar(x,mHC,yerr=stdDevHC,fmt='o',color='red')
+                    matplotlib.pyplot.fill_between(x[:4],mHC[:4],mLC[:4],facecolor='green',alpha=0.2,edgecolor='None')
+                    matplotlib.pyplot.fill_between(x[4:],mHC[4:],mLC[4:],facecolor='orange',alpha=0.2,edgecolor='None')
+                    matplotlib.pyplot.xticks(x,xTickLabels)
+                    matplotlib.pyplot.ylabel('Expression (FPKM)')
+                    matplotlib.pyplot.legend(markerscale=1.5,framealpha=1,loc=2,fontsize=12)
+                    matplotlib.pyplot.tight_layout()
+                    matplotlib.pyplot.savefig(figureFileName)
+                    matplotlib.pyplot.clf()
             else:
                effectsNOUVR.append(effect)
 
@@ -116,14 +135,23 @@ def crossValidation():
         f.close()
         print('\t a {} crossvalidation pickled.'.format(len(hits)))
 
-    # f.2. plot a histogram 
-    print(hits)
+    # f.2. plot a histogram
+    H=numpy.array(hits)
+    pvalue=len(H[H>3])/len(H)
+    print('\t crossvalidation p-value: {}'.format(pvalue))
+    
     x,y=histogrammer(hits)
-    matplotlib.pyplot.plot(x,y,'-',lw=1,color='black')
+    cdfx=[]; cdfy=[]
+    for i in range(len(x)):
+        if y[i] != 0:
+            cdfx.append(x[i])
+            cdfy.append(y[i])
+    print(numpy.cumsum(cdfy))
+    matplotlib.pyplot.plot(cdfx,numpy.cumsum(cdfy),'o',mew=0,color='black')
     matplotlib.pyplot.axvline(x=3,color='red',ls=':',lw=2)
     
-    matplotlib.pyplot.xlabel('Outliers ranks')
-    matplotlib.pyplot.ylabel('Probability density function')
+    matplotlib.pyplot.xlabel('Outlier rank')
+    matplotlib.pyplot.ylabel('Cumulative probability')
     
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('uvr.crossvalidation.pdf')
@@ -287,7 +315,7 @@ print('\t found {} UVR response genes...'.format(len(uvrGenes)))
 
 # 2. perform analysis
 print('performing analysis...')
-effectsUVR,effectsNOUVR,effectsUVRdict=analysis(uvrGenes,verbose=True)
+effectsUVR,effectsNOUVR,effectsUVRdict=analysis(uvrGenes,verbose=True,plotting=False)
 
 # 3. plot one histogram for each set of genes, one for UVR-response genes, another for the rest
 print('plotting...')
@@ -299,7 +327,3 @@ crossValidation()
 
 # 5. final message
 print('... done.')
-
-# make sure you have the trajectories
-
-
