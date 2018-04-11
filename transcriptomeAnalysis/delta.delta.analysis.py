@@ -145,7 +145,6 @@ def crossValidation():
         print('\t\t {} {}'.format(x[i],cdf[i]))
 
     matplotlib.pyplot.plot(x,cdf,'o',mew=0,color='black')
-    print(numberOfDeviation)
     matplotlib.pyplot.axvline(x=numberOfDeviations,color='red',ls=':',lw=2)
     
     matplotlib.pyplot.xlabel('Outlier rank')
@@ -320,7 +319,7 @@ numberOfThreads=4
 crossValidationIterations=10000
 
 flag='ccm'
-#flag='uvr'
+flag='uvr'
 
 plotting=True
 
