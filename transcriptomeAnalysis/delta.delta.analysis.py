@@ -144,8 +144,13 @@ def crossValidation():
     for i in range(len(cdf)):
         print('\t\t {} {}'.format(x[i],cdf[i]))
 
-    matplotlib.pyplot.plot(x,cdf,'o',mew=0,color='black')
-    matplotlib.pyplot.axvline(x=numberOfDeviations,color='red',ls=':',lw=2)
+    matplotlib.pyplot.plot(x,cdf,'s',mec='black',mew=2,mfc='white')
+    
+    matplotlib.pyplot.plot([3,3],[0,cdf[3]],color='black',ls=':',lw=2)
+    matplotlib.pyplot.plot([0,3],[cdf[3],cdf[3]],color='black',ls=':',lw=2)
+
+    base=list(range(0,11+1))
+    matplotlib.pyplot.fill_between(base,numpy.repeat(0.95,len(base)),numpy.repeat(1,len(base)),facecolor='black',alpha=0.2,edgecolor='None')
     
     matplotlib.pyplot.xlabel('Outlier rank')
     matplotlib.pyplot.ylabel('Cumulative probability')
@@ -235,7 +240,7 @@ def plotter():
     bottom=min(centers)-halfDelta
 
     print('\t thresholds: {} {}'.format(bottom,top))
-
+    
     axTop.plot([top,top],[0,0.08],ls=':',color='red',lw=1)
     axTop.plot([bottom,bottom],[0,0.08],ls=':',color='blue',lw=1)
 
@@ -315,13 +320,13 @@ epochs=[0,1]
 growths=['exp','sta']
 diurnals=['AM','PM']
 
-numberOfThreads=4
-crossValidationIterations=10000
+numberOfThreads=16
+crossValidationIterations=1000
 
 flag='ccm'
-flag='uvr'
+#flag='uvr'
 
-plotting=True
+plotting=False
 
 # 1. read data
 print('reading data...')
